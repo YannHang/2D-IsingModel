@@ -3,15 +3,21 @@
 % Macrospcopic Parameters of Target System
 %--------------------------------------------------------------------------
 L=24; % linear dimension
-Jkt=0.1; % normalized spin exchange energy, i.e. J/kT
+Jkt=0.45; % normalized spin exchange energy, i.e. J/kT
+M=0; % magnetisation
 %--------------------------------------------------------------------------
 % Control Parameters of Monte Carlo Process
 %--------------------------------------------------------------------------
-mcsmax=10000; % max number of monte carlo step
-n0=1000; % wait steps for establishing system equilibrium
-Sample_Interval=100; % step interval between each sample
+mcsmax=1200; % max number of monte carlo step
+n0=0; % wait steps for establishing system equilibrium
+Sample_Interval=600*5; % microstep interval between each sample
 s=rng(0,'twister'); % use seed as 0 and generator type of Mersenne Twister
-
+%--------------------------------------------------------------------------
+% Output Data Preallocation
+%--------------------------------------------------------------------------
+Mag_val=zeros(1,ceil((mcsmax-n0)/Sample_Interval));
+Mag_time=zeros(1,ceil((mcsmax-n0)/Sample_Interval));
+%--------------------------------------------------------------------------
 % Lattice Initialization
 %--------------------------------------------------------------------------
 Lattice=zeros(L,L);
@@ -22,6 +28,8 @@ for i=1:L
         Lattice(i,j)=-1;
     end
 end
+% Initialize magnetisation
+M=sum(sum(Lattice));
 %--------------------------------------------------------------------------
 % Periodic Boundary Condition
 %--------------------------------------------------------------------------
@@ -55,6 +63,9 @@ W(5)=exp(-8*Jkt);
 % Monte Carlo Simulation
 %--------------------------------------------------------------------------
 count=0;% used for counting current steps from last measurement
+Sample_count=1; % used for counting current sample number
+Mag_val(1)=M;
+Mag_time(1)=0;
 for mcs=1:mcsmax
     % sweep through the whole lattice
     for i=1:L
@@ -62,8 +73,7 @@ for mcs=1:mcsmax
             % Choose one lattice site
             TargetSpin=Lattice(i,j);
             % Calculate energy difference
-            EnergyDiff=Lattice(ip(i),j)+Lattice(im(i),j)+...
-                Lattice(i,ip(j))+Lattice(i,im(j));
+            EnergyDiff=Lattice(ip(i),j)+Lattice(im(i),j)+Lattice(i,ip(j))+Lattice(i,im(j));
             EnergyDiff=TargetSpin*EnergyDiff;
             % Choose the random number from [0,1]
             dice=rand;
@@ -78,6 +88,9 @@ for mcs=1:mcsmax
                 if count==Sample_Interval
                     count=0;
                     % analysis part
+                    Sample_count=Sample_count+1;
+                    Mag_val(Sample_count)=sum(sum(Lattice));
+                    Mag_time(Sample_count)=mcs;
                 end
             end
         end
