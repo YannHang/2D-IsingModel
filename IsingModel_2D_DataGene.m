@@ -2,7 +2,7 @@
 % linear dimension
 L=[10 20 30 40 50 60 70 80];
 % temperature
-T=linspace(0.8,1.2,81);
+T=linspace(0.9,1.1,201);
 Res=struct('length',0,'temperature',0,'orderpara',0,'susceptibility',0,'fourth_cumulant',0);
 
 for i=1:length(L)
